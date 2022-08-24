@@ -25,7 +25,7 @@
 # DEALINGS IN THE SOFTWARE.
 
 """
-Create a job schedule
+Create a job schedule to run a task 30 minutes into the future
 """
 
 from configparser import ConfigParser
@@ -178,7 +178,8 @@ def execute_sample(global_config: ConfigParser, sample_config: ConfigParser):
     batch_client = BatchServiceClient(
         credentials,
         batch_url=batch_service_url)
-
+    # FIXME:
+    storage_account_url = 'https://perssto.blob.core.windows.net'
     blob_service_client = BlobServiceClient(
         account_url=storage_account_url,
         credential=storage_account_key)

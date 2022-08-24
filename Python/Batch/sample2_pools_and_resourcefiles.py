@@ -85,6 +85,8 @@ def create_pool(
         vm_size=vm_size,
         target_dedicated_nodes=vm_count,
         start_task=batchmodels.StartTask(
+            # command_line=helpers.wrap_commands_in_shell('linux',
+            #                                             task_commands)
             command_line="python " + _SIMPLE_TASK_NAME,
             resource_files=[batchmodels.ResourceFile(
                             file_path=_SIMPLE_TASK_NAME,
@@ -178,7 +180,8 @@ def execute_sample(global_config: ConfigParser, sample_config: ConfigParser):
 
     # Retry 5 times -- default is 3
     batch_client.config.retry_policy.retries = 5
-
+    # FIXME: this url does not calculate right and is a little different than dashboard advice
+    storage_account_url = 'https://perssto.blob.core.windows.net'
     blob_service_client = BlobServiceClient(
         account_url=storage_account_url,
         credential=storage_account_key)

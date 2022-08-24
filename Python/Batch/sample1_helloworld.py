@@ -78,7 +78,11 @@ def submit_job_and_add_task(
     task = batchmodels.TaskAddParameter(
         id="HelloWorld",
         command_line=common.helpers.wrap_commands_in_shell(
-            'linux', ['echo Hello world from the Batch Hello world sample!'])
+            'linux', ['echo Hello world from the Batch Hello world sample!',
+                      'pwd',
+                      'ls',
+                      'find .',
+                      ])
     )
 
     batch_client.task.add(job_id=job.id, task=task)

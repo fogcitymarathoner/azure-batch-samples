@@ -1,2 +1,4 @@
 azure-batch==11.0.0
 azure-storage-blob==12.8.1
+PyYAML==6.0
+# blobxfer==1.10.0

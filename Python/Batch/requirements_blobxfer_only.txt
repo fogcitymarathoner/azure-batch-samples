@@ -1,0 +1,3 @@
+# depends on old azure-storage-blob==2.1.0
+# keep separate until blobxfer supports azure-storage-blob==12.8.1
+blobxfer

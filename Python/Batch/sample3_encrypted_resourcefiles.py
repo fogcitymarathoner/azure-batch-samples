@@ -67,7 +67,8 @@ def generate_secrets(privatekey_pemfile: str, pfxfile: str) -> str:
     # sample purposes. Always protect private keys with strong passphrases.
     subprocess.check_call(
         ['openssl', 'req', '-new', '-nodes', '-x509', '-newkey', 'rsa:2048',
-         '-keyout', privatekey_pemfile, '-out', 'cert.pem', '-days', '14',
+         '-keyout', privatekey_pemfile, '-out', 'cert.pem', '-config', 'openssl.cnf',
+         '-days', '14',
          '-subj', '/C=US/ST=None/L=None/O=None/CN=Test']
     )
     # convert pem to pfx for Azure Batch service
@@ -97,11 +98,12 @@ def generate_secrets(privatekey_pemfile: str, pfxfile: str) -> str:
 
 
 def encrypt_localfile_to_blob_storage(
-    storage_account_name: str,
-    storage_account_key: str,
-    container: str,
-    localresource: str,
-    rm_rsakey_pemfile: bool = True
+        storage_account_name: str,
+        storage_account_key: str,
+        container: str,
+        localresource: str,
+        rm_rsakey_pemfile: bool = True,
+        blobxferexe: str = 'blobxfer'
 ) -> Tuple[str, str]:
     """Encrypts localfile and places it in blob storage via blobxfer
 
@@ -117,7 +119,7 @@ def encrypt_localfile_to_blob_storage(
     rsakeypfx = 'rsakey.pfx'
     sha1_cert_tp = generate_secrets(rsakeypem, rsakeypfx)
     subprocess.check_call(
-        ['blobxfer', 'upload', '--storage-account', storage_account_name,
+        [blobxferexe, 'upload', '--storage-account', storage_account_name,
          '--remote-path', container, '--local-path', localresource,
          '--storage-account-key', storage_account_key,
          '--rsa-private-key', rsakeypem,
@@ -310,8 +312,9 @@ def execute_sample(global_config: ConfigParser, sample_config: ConfigParser):
     batch_service_url = global_config.get('Batch', 'batchserviceurl')
 
     storage_account_key = global_config.get('Storage', 'storageaccountkey')
-    storage_account_url = global_config.get('Storage', 'storageaccounturl')
-
+    blobxferexe = global_config.get('Blobxfer', 'blobxferexe')
+    # FIXME: this url does not calculate right and is a little different than dashboard advice
+    storage_account_url = 'https://perssto.blob.core'
     should_delete_container = sample_config.getboolean(
         'DEFAULT',
         'shoulddeletecontainer')
@@ -345,7 +348,12 @@ def execute_sample(global_config: ConfigParser, sample_config: ConfigParser):
 
     # Retry 5 times -- default is 3
     batch_client.config.retry_policy.retries = 5
+    print('blob_service_client')
+    print('storage_account_url %s' % storage_account_url)
+    print('storage_account_key %s' % storage_account_key)
 
+    # FIXME: this url does not calculate right and is a little different than dashboard advice
+    storage_account_url = 'https://perssto.blob.core.windows.net'
     blob_service_client = BlobServiceClient(
         account_url=storage_account_url,
         credential=storage_account_key)
@@ -372,7 +380,9 @@ def execute_sample(global_config: ConfigParser, sample_config: ConfigParser):
             storage_account_name,
             storage_account_key,
             _CONTAINER_NAME,
-            _RESOURCE_TO_ENCRYPT)
+            _RESOURCE_TO_ENCRYPT,
+            blobxferexe=blobxferexe
+        )
 
         # add certificate to account
         add_certificate_to_account(
